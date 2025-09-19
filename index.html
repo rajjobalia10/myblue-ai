@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runway - Technology for creating anything</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Cross-browser normalization */
+        h1, h2, h3, h4, h5, h6, p, div, span {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ensure consistent box model */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #FFFFFF;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            z-index: 1000;
+            padding: 20px 40px;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        header.chat-mode {
+            border-bottom-color: #E5E5E5;
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Instrument Serif', serif;
+            font-size: 19px;
+            font-weight: 400;
+            color: #000;
+            letter-spacing: -0.3px;
+            cursor: pointer;
+        }
+
+        .nav-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-center a {
+            text-decoration: none;
+            color: #000;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: opacity 0.2s;
+        }
+
+        .nav-center a:hover {
+            opacity: 0.6;
+        }
+
+        .get-started-btn {
+            padding: 9px 18px;
+            border: 1px solid #E5E5E5;
+            border-radius: 20px;
+            background: white;
+            color: #000;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .get-started-btn:hover {
+            background: #F5F5F5;
+        }
+
+        /* Main View */
+        .home-view {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            min-height: calc(100vh - 80px);
+            transition: opacity 0.3s;
+        }
+
+        .home-view.hidden {
+            display: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 45px;
+            font-weight: 400;
+            line-height: 50px;
+            letter-spacing: -2px;
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 0;
+            color: #000;
+        }
+
+        .subtitle {
+            font-size: 14.5px;
+            color: #666;
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 0;
+            line-height: 22px;
+        }
+
+        /* Form Section */
+        .form-container {
+            width: 100%;
+            max-width: 742px;
+            margin: 0 0 20px 0;
+            padding: 0;
+        }
+
+        .form-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: #3B82F6;
+            color: white;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-label svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        /* Input Area */
+        .input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 130px;
+            padding: 16px 16px 50px 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            background: #FFF;
+            font-family: inherit;
+            font-size: 14.5px;
+            line-height: 1.6;
+            outline: none;
+            transition: all 0.2s;
+            resize: none;
+            color: #000;
+        }
+
+        .input-field:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.05);
+        }
+
+        .input-field::placeholder {
+            color: #9CA3AF;
+        }
+
+        /* Fixed Tags */
+        .fixed-tags {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6B7280;
+            background: #F3F4F6;
+            border: 1px solid #E5E7EB;
+        }
+
+        .tag.active {
+            background: #DBEAFE;
+            border-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+        /* Buttons */
+        .input-buttons {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #E5E7EB;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 16px;
+            color: #6B7280;
+        }
+
+        .btn:hover {
+            background: #F9FAFB;
+            border-color: #D1D5DB;
+        }
+
+        .btn-send {
+            background: #000;
+            border-color: #000;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #1F2937;
+            border-color: #1F2937;
+        }
+
+        /* Suggestions */
+        .suggestions {
+            width: 100%;
+            max-width: 742px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 28px;
+            align-items: center;
+        }
+
+        .suggestion-item {
+            font-size: 14px;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 4px 0;
+        }
+
+        .suggestion-item:hover {
+            color: #374151;
+        }
+
+        .new-badge {
+            background: #000;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 6px;
+        }
+
+        .arrow {
+            margin-left: 4px;
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        /* Terms */
+        .terms {
+            font-size: 11.5px;
+            color: #9CA3AF;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 580px;
+        }
+
+        .terms a {
+            color: #6B7280;
+            text-decoration: underline;
+        }
+
+        /* Chat View */
+        .chat-view {
+            display: none;
+            flex: 1;
+            padding-top: 76px;
+            background: #FAFAFA;
+        }
+
+        .chat-view.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 20px;
+            overflow-y: auto;
+        }
+
+        .messages-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #F3F4F6;
+            color: #000;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 3px;
+            padding: 6px 0;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #9CA3AF;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 16px;
+            border-top: 1px solid #E5E7EB;
+            background: white;
+        }
+
+        .chat-input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 100px 0 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            background: #FAFAFA;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .chat-input:focus {
+            background: white;
+            border-color: #3B82F6;
+        }
+
+        .chat-input-buttons {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 6px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-center {
+                display: none;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .content-wrapper {
+                padding: 50px 30px;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <nav>
+            <div class="logo" onclick="goHome()">blueocean</div>
+            <button class="get-started-btn">Get Started</button>
+        </nav>
+    </header>
+
+    <!-- Home View -->
+    <div class="home-view" id="homeView">
+        <div class="container">
+            <div class="content-wrapper">
+                <h1>What do you want to create?</h1>
+                <p class="subtitle">Start generating with a simple conversation.</p>
+                
+                <div class="form-container">
+                    
+                    <div class="input-container">
+                        <textarea class="input-field" id="homeInput" placeholder="Describe your idea" onkeypress="handleHomeEnter(event)"></textarea>
+                        
+                        
+                        <div class="input-buttons">
+                            <button class="btn" onclick="handleAttachment()">+</button>
+                            <button class="btn btn-send" onclick="sendMessage()">↑</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="terms">
+                    By sending a message, you agree to our <a href="#">Terms of Use</a> and acknowledge that you have read and understand our <a href="#">Privacy Policy</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat View -->
+    <div class="chat-view" id="chatView">
+        <div class="chat-container">
+            <div class="messages-area" id="messagesArea">
+                <!-- Messages will appear here -->
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Continue the conversation..." onkeypress="handleChatEnter(event)">
+                <div class="chat-input-buttons">
+                    <button class="btn" onclick="handleAttachment()">+</button>
+                    <button class="btn btn-send" onclick="sendChatMessage()">↑</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const aiResponses = {
+            'default': "I'll help you create that! Let me process your request and generate something amazing for you.",
+            'sneaker': "I'll create a professional ad photo for your sneaker brand. Here's what I'm generating: A dynamic shot with dramatic lighting that highlights the shoe's design.",
+            'nyc': "Creating a dramatic aerial video shot of NYC. I'm generating a sweeping view of Manhattan's skyline at golden hour.",
+            'scandinavian': "I'll design a beautiful Scandinavian style living room. Expect clean lines, natural materials, and neutral colors.",
+            'aleph': "Aleph is our latest AI model with unprecedented creative capabilities for generating videos and complex scenes."
+        };
+
+        function goHome() {
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('chatView').classList.remove('active');
+            document.getElementById('header').classList.remove('chat-mode');
+            document.getElementById('homeInput').value = '';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('homeInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                startChat(message);
+            }
+        }
+
+        function useSuggestion(text) {
+            document.getElementById('homeInput').value = text;
+            startChat(text);
+        }
+
+        function startChat(message) {
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('chatView').classList.add('active');
+            document.getElementById('header').classList.add('chat-mode');
+            
+            const messagesArea = document.getElementById('messagesArea');
+            messagesArea.innerHTML = '';
+            
+            addMessage(message, 'user');
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                removeTypingIndicator();
+                let response = aiResponses.default;
+                
+                if (message.toLowerCase().includes('sneaker')) {
+                    response = aiResponses.sneaker;
+                } else if (message.toLowerCase().includes('nyc')) {
+                    response = aiResponses.nyc;
+                } else if (message.toLowerCase().includes('scandinavian')) {
+                    response = aiResponses.scandinavian;
+                } else if (message.toLowerCase().includes('aleph')) {
+                    response = aiResponses.aleph;
+                }
+                
+                addMessage(response, 'ai');
+            }, 1500);
+        }
+
+        function addMessage(text, sender) {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatarText = sender === 'user' ? 'U' : 'AI';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarText}</div>
+                <div class="message-content">
+                    <div class="message-text">${text}</div>
+                </div>
+            `;
+            
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messagesArea = document.getElementById('messagesArea');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai typing-message';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesArea.appendChild(typingDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingMessage = document.querySelector('.typing-message');
+            if (typingMessage) {
+                typingMessage.remove();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                
+                showTypingIndicator();
+                
+                setTimeout(() => {
+                    removeTypingIndicator();
+                    addMessage("I understand. Let me help you with that.", 'ai');
+                }, 1000);
+            }
+        }
+
+        function handleHomeEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function handleAttachment() {
+            console.log('Attachment feature');
+        }
+    </script>
+</body>
+</html>
+

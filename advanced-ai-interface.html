@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueOcean AI - Advanced Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'instrument-serif': ['Instrument Serif', 'serif'],
+                    },
+                    colors: {
+                        'sidebar-bg': '#1A1B1E',
+                        'sidebar-hover': '#2C2F33',
+                        'sidebar-border': '#3A3D42',
+                    },
+                    animation: {
+                        'slide-in': 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'slide-out': 'slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'fade-in': 'fadeIn 0.2s ease-out',
+                        'fade-out': 'fadeOut 0.2s ease-in',
+                        'pulse-send': 'pulseSend 0.6s ease-in-out',
+                        'typing': 'typing 1.4s infinite',
+                        'chat-transition': 'chatTransition 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #D1D5DB;
+            border-radius: 2px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #9CA3AF;
+        }
+
+        /* Smooth animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulseSend {
+            0%, 100% {
+                transform: scale(1);
+                background-color: #000;
+            }
+            50% {
+                transform: scale(1.05);
+                background-color: #374151;
+            }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes chatTransition {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Backdrop blur effect */
+        .backdrop-blur-sidebar {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* Smooth transitions for all interactive elements */
+        .smooth-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Sidebar collapse states */
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-expanded {
+            transform: translateX(0);
+        }
+
+        /* Toggle button positioning */
+        .toggle-button {
+            position: fixed;
+            top: 20px;
+            left: 16px;
+            z-index: 60;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-button.sidebar-open {
+            left: 280px;
+        }
+
+        /* Ensure button doesn't interfere with content */
+        .toggle-button:hover {
+            transform: scale(1.05);
+        }
+
+        .toggle-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Hamburger icon - no rotation animation */
+        .toggle-button svg {
+            transition: none;
+        }
+
+        /* Sidebar state indicator */
+        .toggle-button[aria-expanded="false"] svg {
+            opacity: 0.8;
+        }
+
+        .toggle-button[aria-expanded="true"] svg {
+            opacity: 1;
+        }
+
+        /* Chat interface states */
+        .chat-input-state {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-response-state {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-response-state.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .chat-input-state.hidden {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+            pointer-events: none;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .toggle-button {
+                top: 16px;
+                left: 16px !important;
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+            }
+            
+            .toggle-button.sidebar-open {
+                left: 16px !important;
+            }
+            
+            .sidebar-mobile {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .sidebar-mobile.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* Large screen adjustments */
+        @media (min-width: 1200px) {
+            .toggle-button {
+                top: 20px;
+                left: 300px;
+            }
+            
+            .toggle-button.sidebar-open {
+                left: 300px;
+            }
+        }
+
+        /* Focus states for accessibility */
+        .focus-visible:focus {
+            outline: 2px solid #3B82F6;
+            outline-offset: 2px;
+        }
+
+        /* Loading animation for AI response */
+        .typing-indicator {
+            display: flex;
+            gap: 3px;
+            padding: 6px 0;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #9CA3AF;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="flex h-screen relative">
+        <!-- Mobile Backdrop -->
+        <div id="mobileBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden backdrop-blur-sidebar" onclick="toggleSidebar()"></div>
+        
+        <!-- Toggle Button (Always Visible) -->
+        <button 
+            id="toggleButton"
+            class="toggle-button bg-[#1a1b1e] text-white shadow-lg hover:bg-[#2a2b2e] smooth-transition focus-visible border border-[#2a2b2e]"
+            onclick="toggleSidebar()"
+            aria-label="Toggle sidebar"
+            aria-expanded="true"
+            title="Toggle navigation menu"
+        >
+            <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed left-0 top-0 h-full bg-[#f8f9fa] text-black z-50 w-[260px] border-r border-gray-200 sidebar-expanded smooth-transition shadow-sm">
+            <div class="flex flex-col h-full">
+                <!-- Header -->
+                <div class="px-4 py-6">
+                    <h2 class="text-sm font-medium text-black" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">blueocean</h2>
+                </div>
+
+                <!-- New Chat Button -->
+                <div class="px-4 pb-4">
+                    <button
+                        onclick="newChat()"
+                        class="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors duration-200 text-black font-medium text-sm smooth-transition focus-visible shadow-sm"
+                        style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+                    >
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>New chat</span>
+                    </button>
+                </div>
+
+                <!-- Chats Section -->
+                <div class="flex-1 overflow-hidden">
+                    <div class="px-4 pb-3">
+                        <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Chats</h3>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto px-4 pb-4 sidebar-scroll">
+                        <div class="space-y-1" id="chatList">
+                            <div onclick="selectChat('1')" data-chat-id="1" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Climate change effects on agriculture</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Today</span>
+                                </div>
+                            </div>
+                            
+                            <div onclick="selectChat('2')" data-chat-id="2" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Python machine learning basics</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Yesterday</span>
+                                </div>
+                            </div>
+                            
+                            <div onclick="selectChat('3')" data-chat-id="3" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Best restaurants in Tokyo 2025</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">2 days ago</span>
+                                </div>
+                            </div>
+                            
+                            <div onclick="selectChat('4')" data-chat-id="4" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">How to invest in index funds</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">3 days ago</span>
+                                </div>
+                            </div>
+                            
+                            <div onclick="selectChat('5')" data-chat-id="5" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Quantum computing explained simply</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">4 days ago</span>
+                                </div>
+                            </div>
+                            
+                            <div onclick="selectChat('6')" data-chat-id="6" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 smooth-transition focus-visible">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-sm font-medium text-black truncate" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Remote work productivity tips</h4>
+                                    <span class="text-xs text-gray-500 mt-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">5 days ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="mainContent" class="flex-1 ml-[260px] transition-all duration-300 smooth-transition">
+            <div class="h-full overflow-auto">
+                <!-- Chat Input State -->
+                <div id="chatInputState" class="chat-input-state min-h-screen flex items-center justify-center px-4 py-20">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <div class="text-center">
+                            <!-- Main Heading -->
+                            <h1 class="font-['Instrument_Serif'] text-5xl font-normal leading-tight tracking-tight text-black mb-5">
+                                What do you want to create?
+                            </h1>
+                            
+                            <!-- Subtitle -->
+                            <p class="text-sm text-gray-600 mb-10 leading-relaxed">
+                                Start generating with a simple conversation.
+                            </p>
+                            
+                            <!-- Input Container -->
+                            <div class="max-w-3xl mx-auto mb-10">
+                                <div class="relative">
+                                    <textarea
+                                        id="messageInput"
+                                        class="message-input w-full h-32 p-4 pr-20 border border-gray-300 rounded-xl bg-white text-sm leading-relaxed outline-none transition-all duration-300 resize-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/5 smooth-transition focus-visible"
+                                        placeholder="Describe your idea"
+                                        onkeypress="handleEnter(event)"
+                                        oninput="handleInputChange(event)"
+                                        aria-label="Describe your idea"
+                                    ></textarea>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="absolute bottom-3 right-3 flex gap-2">
+                                        <button 
+                                            onclick="handleAttachment()" 
+                                            class="w-8 h-8 rounded-md border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 hover:border-gray-400 smooth-transition text-base focus-visible"
+                                            title="Add attachment"
+                                            aria-label="Add attachment"
+                                        >
+                                            +
+                                        </button>
+                                        <button 
+                                            id="sendButton"
+                                            onclick="sendMessage()" 
+                                            class="w-8 h-8 rounded-md border border-black bg-black text-white flex items-center justify-center hover:bg-gray-800 hover:border-gray-800 smooth-transition text-base disabled:opacity-50 disabled:cursor-not-allowed focus-visible"
+                                            title="Send message"
+                                            aria-label="Send message"
+                                        >
+                                            <span id="sendIcon">↑</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Loading indicator -->
+                                    <div id="loadingIndicator" class="absolute bottom-3 left-3 hidden">
+                                        <div class="flex space-x-1">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Terms -->
+                            <div class="text-xs text-gray-400 leading-relaxed max-w-2xl mx-auto">
+                                By sending a message, you agree to our
+                                <a href="#" class="text-gray-600 underline hover:text-gray-800 focus-visible">Terms of Use</a>
+                                and acknowledge that you have read and understand our
+                                <a href="#" class="text-gray-600 underline hover:text-gray-800 focus-visible">Privacy Policy</a>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Response State -->
+                <div id="chatResponseState" class="chat-response-state min-h-screen px-4 py-20">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <!-- Back Button -->
+                        <div class="mb-8">
+                            <button 
+                                onclick="backToInput()" 
+                                class="flex items-center gap-2 text-gray-600 hover:text-gray-800 smooth-transition focus-visible"
+                                aria-label="Back to input"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                                <span>Back to search</span>
+                            </button>
+                        </div>
+
+                        <!-- User Query Display -->
+                        <div class="mb-8 p-6 bg-gray-50 rounded-xl">
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-sm font-medium text-gray-600">U</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-900 mb-2">Your Query</h3>
+                                    <p id="userQueryDisplay" class="text-gray-700 leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Response Area -->
+                        <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+                            <div class="flex items-start gap-4">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-sm font-medium text-white">AI</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-gray-900 mb-2">AI Response</h3>
+                                    <div id="aiResponseArea">
+                                        <!-- Typing indicator initially -->
+                                        <div id="typingIndicator" class="typing-indicator">
+                                            <div class="typing-dot"></div>
+                                            <div class="typing-dot"></div>
+                                            <div class="typing-dot"></div>
+                                        </div>
+                                        <!-- AI response will be inserted here -->
+                                        <div id="aiResponseContent" class="hidden">
+                                            <p class="text-gray-700 leading-relaxed mb-4">
+                                                I understand you're looking for information about <span id="queryHighlight" class="font-medium text-blue-600"></span>. 
+                                                Let me provide you with a comprehensive response.
+                                            </p>
+                                            <div class="space-y-4">
+                                                <div class="p-4 bg-blue-50 rounded-lg">
+                                                    <h4 class="font-medium text-blue-900 mb-2">Key Points</h4>
+                                                    <ul class="text-blue-800 space-y-1">
+                                                        <li>• Detailed analysis and insights</li>
+                                                        <li>• Practical recommendations</li>
+                                                        <li>• Additional resources and references</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="p-4 bg-green-50 rounded-lg">
+                                                    <h4 class="font-medium text-green-900 mb-2">Next Steps</h4>
+                                                    <p class="text-green-800">Based on your query, I recommend exploring these areas further and considering the practical applications.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-8 flex gap-4 justify-center">
+                            <button 
+                                onclick="newSearch()" 
+                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 smooth-transition focus-visible"
+                            >
+                                New Search
+                            </button>
+                            <button 
+                                onclick="shareResponse()" 
+                                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 smooth-transition focus-visible"
+                            >
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        let isSidebarOpen = true;
+        let isSendingMessage = false;
+        let currentChatId = null;
+        let chatHistory = [];
+        let currentQuery = '';
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadChatHistory();
+        });
+
+        function initializeApp() {
+            // Start with sidebar closed by default for clean initial state
+            closeSidebar();
+        }
+
+        function setupEventListeners() {
+            // Handle window resize for responsive behavior
+            window.addEventListener('resize', handleResize);
+            
+            // Handle escape key to close sidebar on mobile
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && window.innerWidth < 768) {
+                    closeSidebar();
+                }
+            });
+
+            // Handle keyboard navigation
+            document.addEventListener('keydown', function(event) {
+                // Tab navigation for sidebar
+                if (event.key === 'Tab' && isSidebarOpen) {
+                    const sidebar = document.getElementById('sidebar');
+                    const focusableElements = sidebar.querySelectorAll('button, [tabindex]:not([tabindex="-1"])');
+                    const firstElement = focusableElements[0];
+                    const lastElement = focusableElements[focusableElements.length - 1];
+                    
+                    if (event.shiftKey && document.activeElement === firstElement) {
+                        event.preventDefault();
+                        lastElement.focus();
+                    } else if (!event.shiftKey && document.activeElement === lastElement) {
+                        event.preventDefault();
+                        firstElement.focus();
+                    }
+                }
+            });
+        }
+
+        function handleResize() {
+            const isMobile = window.innerWidth < 768;
+            // On mobile, always keep sidebar closed for clean button positioning
+            if (isMobile && isSidebarOpen) {
+                closeSidebar();
+            }
+        }
+
+        // Feature 1: Collapsible Sidebar with Toggle Button
+        function toggleSidebar() {
+            if (isSidebarOpen) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleButton = document.getElementById('toggleButton');
+            const backdrop = document.getElementById('mobileBackdrop');
+            
+            isSidebarOpen = true;
+            
+            // Update sidebar classes
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.add('sidebar-expanded');
+            
+            // Update toggle button position - move to right of sidebar
+            toggleButton.classList.add('sidebar-open');
+            toggleButton.setAttribute('aria-expanded', 'true');
+            
+            // Show backdrop on mobile
+            if (window.innerWidth < 768) {
+                backdrop.classList.remove('hidden');
+                backdrop.style.opacity = '0';
+                backdrop.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    backdrop.style.opacity = '1';
+                }, 10);
+            }
+            
+            // Update main content layout
+            if (window.innerWidth >= 768) {
+                mainContent.classList.remove('ml-0');
+                mainContent.classList.add('ml-[260px]');
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleButton = document.getElementById('toggleButton');
+            const backdrop = document.getElementById('mobileBackdrop');
+            
+            isSidebarOpen = false;
+            
+            // Update sidebar classes
+            sidebar.classList.remove('sidebar-expanded');
+            sidebar.classList.add('sidebar-collapsed');
+            
+            // Update toggle button position - move to left edge
+            toggleButton.classList.remove('sidebar-open');
+            toggleButton.setAttribute('aria-expanded', 'false');
+            
+            // Hide backdrop on mobile
+            if (window.innerWidth < 768) {
+                backdrop.style.opacity = '0';
+                setTimeout(() => {
+                    backdrop.classList.add('hidden');
+                }, 300);
+            }
+            
+            // Update main content layout
+            if (window.innerWidth >= 768) {
+                mainContent.classList.remove('ml-[260px]');
+                mainContent.classList.add('ml-0');
+            }
+        }
+
+        // Feature 2: Chat Interface Transition and Secondary Tab
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || isSendingMessage) {
+                return;
+            }
+            
+            // Store the query
+            currentQuery = message;
+            
+            // Start sending process
+            isSendingMessage = true;
+            showLoadingState();
+            
+            // Simulate processing delay
+            setTimeout(() => {
+                try {
+                    // Process the message
+                    processMessage(message);
+                    
+                    // Clear input
+                    messageInput.value = '';
+                    
+                    // Hide loading state
+                    hideLoadingState();
+                    
+                    // Transition to response state
+                    transitionToResponseState();
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    hideLoadingState();
+                    showNotification('Failed to send message. Please try again.', 'error');
+                } finally {
+                    isSendingMessage = false;
+                }
+            }, 1500);
+        }
+
+        function transitionToResponseState() {
+            const inputState = document.getElementById('chatInputState');
+            const responseState = document.getElementById('chatResponseState');
+            const userQueryDisplay = document.getElementById('userQueryDisplay');
+            const queryHighlight = document.getElementById('queryHighlight');
+            
+            // Update query display
+            userQueryDisplay.textContent = currentQuery;
+            queryHighlight.textContent = currentQuery;
+            
+            // Hide input state
+            inputState.classList.add('hidden');
+            
+            // Show response state with animation
+            responseState.classList.add('active');
+            
+            // Simulate AI typing
+            setTimeout(() => {
+                showAIResponse();
+            }, 2000);
+        }
+
+        function showAIResponse() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            const aiResponseContent = document.getElementById('aiResponseContent');
+            
+            // Hide typing indicator
+            typingIndicator.classList.add('hidden');
+            
+            // Show AI response with animation
+            aiResponseContent.classList.remove('hidden');
+            aiResponseContent.style.animation = 'chatTransition 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+
+        function backToInput() {
+            const inputState = document.getElementById('chatInputState');
+            const responseState = document.getElementById('chatResponseState');
+            
+            // Hide response state
+            responseState.classList.remove('active');
+            
+            // Show input state
+            inputState.classList.remove('hidden');
+            
+            // Focus on input
+            const messageInput = document.getElementById('messageInput');
+            messageInput.focus();
+        }
+
+        function newSearch() {
+            backToInput();
+            newChat();
+        }
+
+        function shareResponse() {
+            showNotification('Share feature coming soon!', 'info');
+        }
+
+        // Chat functionality
+        function newChat() {
+            // Clear current chat
+            currentChatId = null;
+            currentQuery = '';
+            
+            // Clear input
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = '';
+            messageInput.focus();
+            
+            // Update UI
+            updateChatSelection();
+            
+            // Show success feedback
+            showNotification('New chat started', 'success');
+        }
+
+        function selectChat(chatId) {
+            currentChatId = chatId;
+            updateChatSelection();
+            
+            // Load chat content (placeholder)
+            const chat = chatHistory.find(c => c.id === chatId);
+            if (chat) {
+                showNotification(`Loading: ${chat.title}`, 'info');
+            }
+        }
+
+        function updateChatSelection() {
+            // Remove active class from all chat items
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('bg-gray-200', 'border-l-2', 'border-blue-500');
+            });
+            
+            // Add active class to current chat
+            if (currentChatId) {
+                const activeChat = document.querySelector(`[data-chat-id="${currentChatId}"]`);
+                if (activeChat) {
+                    activeChat.classList.add('bg-gray-200', 'border-l-2', 'border-blue-500');
+                }
+            }
+        }
+
+        function processMessage(message) {
+            // Add to chat history
+            const chatId = Date.now().toString();
+            const newChat = {
+                id: chatId,
+                title: message.length > 30 ? message.substring(0, 30) + '...' : message,
+                preview: message,
+                createdAt: new Date()
+            };
+            
+            chatHistory.unshift(newChat);
+            currentChatId = chatId;
+            
+            // Update UI
+            updateChatList();
+            updateChatSelection();
+        }
+
+        function showLoadingState() {
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Disable send button
+            sendButton.disabled = true;
+            sendButton.classList.add('send-loading');
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('hidden');
+            
+            // Update send icon
+            sendIcon.textContent = '⏳';
+        }
+
+        function hideLoadingState() {
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Enable send button
+            sendButton.disabled = false;
+            sendButton.classList.remove('send-loading');
+            
+            // Hide loading indicator
+            loadingIndicator.classList.add('hidden');
+            
+            // Restore send icon
+            sendIcon.textContent = '↑';
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function handleInputChange(event) {
+            const message = event.target.value.trim();
+            const sendButton = document.getElementById('sendButton');
+            
+            // Enable/disable send button based on input
+            sendButton.disabled = !message || isSendingMessage;
+        }
+
+        function handleAttachment() {
+            showNotification('Attachment feature coming soon!', 'info');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg smooth-transition animate-fade-in ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'info' ? 'bg-blue-500 text-white' :
+                'bg-gray-500 text-white'
+            }`;
+            notification.textContent = message;
+            notification.setAttribute('role', 'alert');
+            notification.setAttribute('aria-live', 'polite');
+            
+            // Add to DOM
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('animate-fade-out');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 200);
+            }, 3000);
+        }
+
+        // Chat history management
+        function loadChatHistory() {
+            // Load from localStorage or use default data
+            const savedHistory = localStorage.getItem('blueocean-chat-history');
+            if (savedHistory) {
+                chatHistory = JSON.parse(savedHistory);
+            } else {
+                // Default chat history
+                chatHistory = [
+                    {
+                        id: '1',
+                        title: 'Climate change effects on agriculture',
+                        preview: 'Climate change effects on agriculture',
+                        createdAt: new Date()
+                    },
+                    {
+                        id: '2',
+                        title: 'Python machine learning basics',
+                        preview: 'Python machine learning basics',
+                        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '3',
+                        title: 'Best restaurants in Tokyo 2025',
+                        preview: 'Best restaurants in Tokyo 2025',
+                        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '4',
+                        title: 'How to invest in index funds',
+                        preview: 'How to invest in index funds',
+                        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '5',
+                        title: 'Quantum computing explained simply',
+                        preview: 'Quantum computing explained simply',
+                        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '6',
+                        title: 'Remote work productivity tips',
+                        preview: 'Remote work productivity tips',
+                        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+                    }
+                ];
+            }
+            
+            updateChatList();
+        }
+
+        function updateChatList() {
+            // Save to localStorage
+            localStorage.setItem('blueocean-chat-history', JSON.stringify(chatHistory));
+            
+            // Update UI (this would be handled by React in the real app)
+            console.log('Chat history updated:', chatHistory);
+        }
+    </script>
+</body>
+</html>

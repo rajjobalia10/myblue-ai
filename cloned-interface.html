@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueOcean AI - Cloned Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'instrument-serif': ['Instrument Serif', 'serif'],
+                    },
+                    colors: {
+                        'sidebar-bg': '#1A1B1E',
+                        'sidebar-hover': '#2C2F33',
+                        'sidebar-border': '#3A3D42',
+                    },
+                    animation: {
+                        'slide-in': 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'slide-out': 'slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'fade-in': 'fadeIn 0.2s ease-out',
+                        'fade-out': 'fadeOut 0.2s ease-in',
+                        'pulse-send': 'pulseSend 0.6s ease-in-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #4A4D52;
+            border-radius: 2px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #6B7280;
+        }
+
+        /* Smooth animations */
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulseSend {
+            0%, 100% {
+                transform: scale(1);
+                background-color: #000;
+            }
+            50% {
+                transform: scale(1.05);
+                background-color: #374151;
+            }
+        }
+
+        /* Backdrop blur effect */
+        .backdrop-blur-sidebar {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* Smooth transitions for all interactive elements */
+        .smooth-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Loading state for send button */
+        .send-loading {
+            animation: pulseSend 0.6s ease-in-out;
+        }
+
+        /* Message input focus states */
+        .message-input:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Smooth sidebar transitions */
+        .sidebar-mobile {
+            width: 260px;
+            transition: width 250ms ease-in-out;
+            overflow: hidden;
+        }
+        
+        .sidebar-mobile.collapsed {
+            width: 60px;
+        }
+        
+        .sidebar-mobile.hidden {
+            transform: translateX(-100%);
+        }
+        
+        /* Collapsed sidebar - hide all text and content */
+        .sidebar-mobile.collapsed .collapsible-content {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: opacity 200ms ease, transform 200ms ease;
+            pointer-events: none;
+        }
+        
+        .sidebar-mobile.collapsed .logo-text {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: opacity 200ms ease, transform 200ms ease;
+        }
+        
+        /* Expanded sidebar - show all content */
+        .sidebar-mobile:not(.collapsed) .collapsible-content {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 250ms ease 100ms, transform 250ms ease 100ms;
+            pointer-events: auto;
+        }
+        
+        .sidebar-mobile:not(.collapsed) .logo-text {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 250ms ease 100ms, transform 250ms ease 100ms;
+        }
+        
+        /* Hamburger button - always visible and centered when collapsed */
+        .sidebar-mobile.collapsed .hamburger-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .sidebar-mobile:not(.collapsed) .hamburger-btn {
+            position: static;
+            transform: none;
+        }
+        
+        /* Hover target area */
+        .hover-target {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            z-index: 50;
+            background: transparent;
+        }
+        
+        /* Text overflow handling */
+        .chat-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar-mobile {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            
+            .sidebar-mobile:not(.closed) {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <div class="flex h-screen relative">
+        <!-- Mobile Backdrop -->
+        <div id="mobileBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden backdrop-blur-sidebar" onclick="toggleSidebar()"></div>
+        
+        <!-- Sidebar -->
+        <div class="fixed left-0 top-0 h-full bg-[#1a1b1e] text-white z-40 border-r border-[#2a2b2e] sidebar-mobile collapsed" id="sidebar">
+            <!-- Hover target area -->
+            <div class="hover-target" onmouseenter="handleHoverEnter()" onmouseleave="handleHoverLeave()"></div>
+            
+            <div class="flex flex-col h-full relative" onmouseenter="handleSidebarEnter()" onmouseleave="handleSidebarLeave()">
+                <!-- Header -->
+                <div class="p-4 border-b border-[#2a2b2e] flex items-center justify-between relative min-h-[60px]">
+                    <!-- Logo text - hidden when collapsed -->
+                    <h2 class="logo-text text-lg font-semibold text-white font-['Instrument_Serif'] whitespace-nowrap">blueocean</h2>
+                    
+                    <!-- Toggle button - centered when collapsed -->
+                    <button onclick="togglePinned()" class="hamburger-btn p-2 hover:bg-[#2a2b2e] rounded-lg transition-colors duration-200 flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Collapsible Content -->
+                <div class="collapsible-content flex-1 flex flex-col">
+                    <!-- New Chat Button -->
+                    <div class="p-4">
+                        <button onclick="newChat()" class="w-full flex items-center gap-3 px-4 py-3 bg-transparent hover:bg-[#2a2b2e] rounded-lg transition-colors duration-200 text-white font-medium text-sm">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span class="whitespace-nowrap">New Chat</span>
+                        </button>
+                    </div>
+
+                    <!-- Chats Section -->
+                    <div class="flex-1 overflow-hidden">
+                        <div class="px-4 pb-3">
+                            <h3 class="text-xs font-medium text-[#9ca3af] uppercase tracking-wide">Chats</h3>
+                        </div>
+                        
+                        <div class="flex-1 overflow-y-auto px-4 pb-4 sidebar-scroll">
+                            <div class="space-y-1" id="chatList">
+                                <div onclick="selectChat('1')" data-chat-id="1" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">Climate change effects on agriculture</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">Today</span>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="selectChat('2')" data-chat-id="2" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">Python machine learning basics</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">Yesterday</span>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="selectChat('3')" data-chat-id="3" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">Best restaurants in Tokyo 2025</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">2 days ago</span>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="selectChat('4')" data-chat-id="4" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">How to invest in index funds</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">3 days ago</span>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="selectChat('5')" data-chat-id="5" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">Quantum computing explained simply</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">4 days ago</span>
+                                    </div>
+                                </div>
+                                
+                                <div onclick="selectChat('6')" data-chat-id="6" class="chat-item group relative p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#2a2b2e] smooth-transition">
+                                    <div class="flex flex-col min-w-0">
+                                        <div class="flex items-start justify-between">
+                                            <h4 class="chat-title text-sm font-medium text-white pr-2">Remote work productivity tips</h4>
+                                        </div>
+                                        <span class="text-xs text-[#9ca3af] mt-1">5 days ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-4 border-t border-[#2a2b2e]">
+                        <div class="text-xs text-[#9ca3af] text-center">AI Search Assistant</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="mainContent" class="flex-1 ml-[60px] transition-all duration-300">
+            <div class="h-full overflow-auto">
+                <!-- Hero Section -->
+                <div class="min-h-screen flex items-center justify-center px-4 py-20">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <div class="text-center">
+                            <!-- Main Heading -->
+                            <h1 class="font-['Instrument_Serif'] text-5xl font-normal leading-tight tracking-tight text-black mb-5">
+                                What do you want to create?
+                            </h1>
+                            
+                            <!-- Subtitle -->
+                            <p class="text-sm text-gray-600 mb-10 leading-relaxed">
+                                Start generating with a simple conversation.
+                            </p>
+                            
+                            <!-- Input Container -->
+                            <div class="max-w-3xl mx-auto mb-10">
+                                <div class="relative">
+                                    <textarea
+                                        id="messageInput"
+                                        class="message-input w-full h-32 p-4 pr-20 border border-gray-300 rounded-xl bg-white text-sm leading-relaxed outline-none transition-all duration-300 resize-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/5 smooth-transition"
+                                        placeholder="Describe your idea"
+                                        onkeypress="handleEnter(event)"
+                                        oninput="handleInputChange(event)"
+                                    ></textarea>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="absolute bottom-3 right-3 flex gap-2">
+                                        <button 
+                                            onclick="handleAttachment()" 
+                                            class="w-8 h-8 rounded-md border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 hover:border-gray-400 smooth-transition text-base"
+                                            title="Add attachment"
+                                        >
+                                            +
+                                        </button>
+                                        <button 
+                                            id="sendButton"
+                                            onclick="sendMessage()" 
+                                            class="w-8 h-8 rounded-md border border-black bg-black text-white flex items-center justify-center hover:bg-gray-800 hover:border-gray-800 smooth-transition text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Send message"
+                                        >
+                                            <span id="sendIcon">↑</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Loading indicator -->
+                                    <div id="loadingIndicator" class="absolute bottom-3 left-3 hidden">
+                                        <div class="flex space-x-1">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Terms -->
+                            <div class="text-xs text-gray-400 leading-relaxed max-w-2xl mx-auto">
+                                By sending a message, you agree to our
+                                <a href="#" class="text-gray-600 underline hover:text-gray-800">Terms of Use</a>
+                                and acknowledge that you have read and understand our
+                                <a href="#" class="text-gray-600 underline hover:text-gray-800">Privacy Policy</a>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        let sidebarState = 'collapsed'; // 'collapsed', 'hovered', 'pinned'
+        let isSendingMessage = false;
+        let currentChatId = null;
+        let chatHistory = [];
+        let hoverTimeout = null;
+        let leaveTimeout = null; // Timeout for when cursor leaves sidebar
+        let isHoveringSidebar = false; // Track if cursor is over sidebar
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadChatHistory();
+        });
+
+        function initializeApp() {
+            // Start with sidebar collapsed by default
+            updateSidebarState('collapsed');
+        }
+
+        function setupEventListeners() {
+            // Handle window resize for responsive behavior
+            window.addEventListener('resize', handleResize);
+            
+            // Handle escape key to close sidebar on mobile
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && window.innerWidth < 768) {
+                    updateSidebarState('collapsed');
+                }
+            });
+        }
+
+        function handleResize() {
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                updateSidebarState('collapsed');
+            }
+        }
+
+        // Sidebar state management
+        function updateSidebarState(newState) {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const backdrop = document.getElementById('mobileBackdrop');
+            
+            // Clear any existing timeouts
+            if (hoverTimeout) {
+                clearTimeout(hoverTimeout);
+                hoverTimeout = null;
+            }
+            if (leaveTimeout) {
+                clearTimeout(leaveTimeout);
+                leaveTimeout = null;
+            }
+            
+            // Remove all state classes
+            sidebar.classList.remove('collapsed', 'hovered', 'pinned', 'hidden');
+            
+            // Add new state class
+            sidebar.classList.add(newState);
+            sidebarState = newState;
+            
+            // Update main content margin with smooth transition
+            if (window.innerWidth >= 768) {
+                switch (newState) {
+                    case 'collapsed':
+                        mainContent.classList.remove('ml-[260px]');
+                        mainContent.classList.add('ml-[60px]');
+                        break;
+                    case 'hovered':
+                    case 'pinned':
+                        mainContent.classList.remove('ml-[60px]');
+                        mainContent.classList.add('ml-[260px]');
+                        break;
+                }
+            } else {
+                // Mobile behavior
+                if (newState === 'collapsed') {
+                    mainContent.classList.remove('ml-[260px]');
+                    mainContent.classList.add('ml-0');
+                    sidebar.classList.add('hidden');
+                } else {
+                    mainContent.classList.remove('ml-0');
+                    mainContent.classList.add('ml-[260px]');
+                }
+            }
+            
+            // Handle mobile backdrop
+            if (window.innerWidth < 768) {
+                if (newState === 'collapsed') {
+                    backdrop.classList.add('hidden');
+                } else {
+                    backdrop.classList.remove('hidden');
+                    backdrop.style.opacity = '0';
+                    backdrop.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => {
+                        backdrop.style.opacity = '1';
+                    }, 10);
+                }
+            }
+        }
+
+        // Toggle between collapsed and pinned states
+        function togglePinned() {
+            // Clear any pending timeouts when manually toggling
+            if (leaveTimeout) {
+                clearTimeout(leaveTimeout);
+                leaveTimeout = null;
+            }
+            if (hoverTimeout) {
+                clearTimeout(hoverTimeout);
+                hoverTimeout = null;
+            }
+            
+            if (sidebarState === 'collapsed' || sidebarState === 'hovered') {
+                updateSidebarState('pinned');
+                isHoveringSidebar = false; // Reset hover state when pinning
+            } else {
+                updateSidebarState('collapsed');
+                isHoveringSidebar = false; // Reset hover state when collapsing
+            }
+        }
+
+        // Mobile sidebar toggle function
+        function toggleSidebar() {
+            if (window.innerWidth < 768) {
+                // On mobile, toggle between collapsed and visible
+                if (sidebarState === 'collapsed') {
+                    updateSidebarState('pinned'); // Use pinned state for mobile visibility
+                } else {
+                    updateSidebarState('collapsed');
+                }
+            } else {
+                // On desktop, use the regular toggle
+                togglePinned();
+            }
+        }
+
+        // Enhanced hover functionality with proper persistence
+        function handleHoverEnter() {
+            if (window.innerWidth >= 768 && sidebarState === 'collapsed') {
+                // Clear any pending collapse timeouts
+                if (leaveTimeout) {
+                    clearTimeout(leaveTimeout);
+                    leaveTimeout = null;
+                }
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
+                
+                // Mark that we're hovering over the sidebar
+                isHoveringSidebar = true;
+                updateSidebarState('hovered');
+            }
+        }
+
+        function handleHoverLeave() {
+            if (window.innerWidth >= 768 && sidebarState === 'hovered') {
+                // Mark that we're no longer hovering
+                isHoveringSidebar = false;
+                
+                // Add delay to prevent flickering when moving mouse quickly
+                // This gives users time to move their cursor back to the sidebar
+                leaveTimeout = setTimeout(() => {
+                    // Only collapse if we're still not hovering and not pinned
+                    if (!isHoveringSidebar && sidebarState === 'hovered') {
+                        updateSidebarState('collapsed');
+                    }
+                }, 200); // Reduced delay for better responsiveness
+            }
+        }
+
+        // New function to handle when cursor enters the actual sidebar content
+        function handleSidebarEnter() {
+            if (window.innerWidth >= 768) {
+                // Clear any pending collapse
+                if (leaveTimeout) {
+                    clearTimeout(leaveTimeout);
+                    leaveTimeout = null;
+                }
+                isHoveringSidebar = true;
+                
+                // If sidebar is collapsed, open it on hover
+                if (sidebarState === 'collapsed') {
+                    updateSidebarState('hovered');
+                }
+            }
+        }
+
+        // New function to handle when cursor leaves the actual sidebar content
+        function handleSidebarLeave() {
+            if (window.innerWidth >= 768 && sidebarState === 'hovered') {
+                isHoveringSidebar = false;
+                
+                // Add delay before collapsing
+                leaveTimeout = setTimeout(() => {
+                    if (!isHoveringSidebar && sidebarState === 'hovered') {
+                        updateSidebarState('collapsed');
+                    }
+                }, 150); // Shorter delay when leaving sidebar directly
+            }
+        }
+
+        // Chat functionality
+        function newChat() {
+            // Clear current chat
+            currentChatId = null;
+            
+            // Clear input
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = '';
+            messageInput.focus();
+            
+            // Update UI
+            updateChatSelection();
+            
+            // Show success feedback
+            showNotification('New chat started', 'success');
+        }
+
+        function selectChat(chatId) {
+            currentChatId = chatId;
+            updateChatSelection();
+            
+            // Load chat content (placeholder)
+            const chat = chatHistory.find(c => c.id === chatId);
+            if (chat) {
+                showNotification(`Loading: ${chat.title}`, 'info');
+            }
+        }
+
+        function updateChatSelection() {
+            // Remove active class from all chat items
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('bg-[#2a2b2e]', 'border-l-2', 'border-blue-500');
+            });
+            
+            // Add active class to current chat
+            if (currentChatId) {
+                const activeChat = document.querySelector(`[data-chat-id="${currentChatId}"]`);
+                if (activeChat) {
+                    activeChat.classList.add('bg-[#2a2b2e]', 'border-l-2', 'border-blue-500');
+                }
+            }
+        }
+
+        // Message sending functionality
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || isSendingMessage) {
+                return;
+            }
+            
+            // Start sending process
+            isSendingMessage = true;
+            showLoadingState();
+            
+            // Simulate API call with realistic delay
+            setTimeout(() => {
+                try {
+                    // Process the message
+                    processMessage(message);
+                    
+                    // Clear input
+                    messageInput.value = '';
+                    
+                    // Hide loading state
+                    hideLoadingState();
+                    
+                    // Transition to chat interface
+                    transitionToChat(message);
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    hideLoadingState();
+                    showNotification('Failed to send message. Please try again.', 'error');
+                } finally {
+                    isSendingMessage = false;
+                }
+            }, 1500);
+        }
+
+        // Transition to chat interface
+        function transitionToChat(initialMessage) {
+            // Add smooth transition effect
+            const mainContent = document.getElementById('mainContent');
+            mainContent.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            mainContent.style.opacity = '0';
+            mainContent.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                // Redirect to chat page with the initial message
+                const encodedMessage = encodeURIComponent(initialMessage);
+                window.location.href = `chat.html?message=${encodedMessage}`;
+            }, 500);
+        }
+
+        function processMessage(message) {
+            // Add to chat history
+            const chatId = Date.now().toString();
+            const newChat = {
+                id: chatId,
+                title: message.length > 30 ? message.substring(0, 30) + '...' : message,
+                preview: message,
+                createdAt: new Date()
+            };
+            
+            chatHistory.unshift(newChat);
+            currentChatId = chatId;
+            
+            // Update UI
+            updateChatList();
+            updateChatSelection();
+        }
+
+        function showLoadingState() {
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Disable send button
+            sendButton.disabled = true;
+            sendButton.classList.add('send-loading');
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('hidden');
+            
+            // Update send icon
+            sendIcon.textContent = '⏳';
+        }
+
+        function hideLoadingState() {
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Enable send button
+            sendButton.disabled = false;
+            sendButton.classList.remove('send-loading');
+            
+            // Hide loading indicator
+            loadingIndicator.classList.add('hidden');
+            
+            // Restore send icon
+            sendIcon.textContent = '↑';
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function handleInputChange(event) {
+            const message = event.target.value.trim();
+            const sendButton = document.getElementById('sendButton');
+            
+            // Enable/disable send button based on input
+            sendButton.disabled = !message || isSendingMessage;
+        }
+
+        function handleAttachment() {
+            showNotification('Attachment feature coming soon!', 'info');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg smooth-transition animate-fade-in ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'info' ? 'bg-blue-500 text-white' :
+                'bg-gray-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            // Add to DOM
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('animate-fade-out');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 200);
+            }, 3000);
+        }
+
+        // Chat history management
+        function loadChatHistory() {
+            // Load from localStorage or use default data
+            const savedHistory = localStorage.getItem('blueocean-chat-history');
+            if (savedHistory) {
+                chatHistory = JSON.parse(savedHistory);
+            } else {
+                // Default chat history
+                chatHistory = [
+                    {
+                        id: '1',
+                        title: 'Climate change effects on agriculture',
+                        preview: 'Climate change effects on agriculture',
+                        createdAt: new Date()
+                    },
+                    {
+                        id: '2',
+                        title: 'Python machine learning basics',
+                        preview: 'Python machine learning basics',
+                        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '3',
+                        title: 'Best restaurants in Tokyo 2025',
+                        preview: 'Best restaurants in Tokyo 2025',
+                        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '4',
+                        title: 'How to invest in index funds',
+                        preview: 'How to invest in index funds',
+                        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '5',
+                        title: 'Quantum computing explained simply',
+                        preview: 'Quantum computing explained simply',
+                        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        id: '6',
+                        title: 'Remote work productivity tips',
+                        preview: 'Remote work productivity tips',
+                        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+                    }
+                ];
+            }
+            
+            updateChatList();
+        }
+
+        function updateChatList() {
+            // Save to localStorage
+            localStorage.setItem('blueocean-chat-history', JSON.stringify(chatHistory));
+            
+            // Update UI (this would be handled by React in the real app)
+            console.log('Chat history updated:', chatHistory);
+        }
+
+        function formatDate(date) {
+            const now = new Date();
+            const diffTime = Math.abs(now.getTime() - date.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'Today';
+            if (diffDays === 2) return 'Yesterday';
+            if (diffDays <= 7) return `${diffDays - 1} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        function truncateText(text, maxLength = 30) {
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+    </script>
+</body>
+</html>
